@@ -1,0 +1,95 @@
+# stockwatch config — copy to stockwatch.yaml
+# Strings support ${ENV_VAR} and ${ENV_VAR:-default}; put secrets in .env
+
+defaults:
+  interval: 5m          # per-watch override below
+  jitter: 0.1           # ±10% randomisation on every interval
+  errorThreshold: 3     # consecutive failures before an "error" notification
+  historyLimit: 50
+
+stateFile: ./data/state.json
+
+notifiers:
+  phone:
+    type: ntfy
+    topic: ${NTFY_TOPIC}
+    # server: https://ntfy.sh
+    # token: ${NTFY_TOKEN}
+
+  # discord:
+  #   type: discord
+  #   webhookUrl: ${DISCORD_WEBHOOK_URL}
+
+  # telegram:
+  #   type: telegram
+  #   botToken: ${TELEGRAM_BOT_TOKEN}
+  #   chatId: ${TELEGRAM_CHAT_ID}
+
+  # email:
+  #   type: email
+  #   host: ${SMTP_HOST}
+  #   port: 465
+  #   secure: true
+  #   user: ${SMTP_USER}
+  #   pass: ${SMTP_PASS}
+  #   from: stockwatch <${SMTP_USER}>
+  #   to: ${EMAIL_TO}
+
+  # imessage:             # macOS only — daemon must run natively, not in Docker
+  #   type: imessage
+  #   to: ${IMESSAGE_TO}
+
+watches:
+  # ── Shopify store: zero config, uses the public /products/<handle>.js endpoint ──
+  - name: Example hoodie
+    url: https://example-store.myshopify.com/products/classic-hoodie
+    interval: 2m
+    check:
+      type: shopify
+      variant: "Medium / Black"   # omit ⇒ any variant
+
+  # ── Static HTML: classify the text of one element ──
+  - name: Example widget
+    url: https://example.com/widget
+    check:
+      type: selector
+      selector: "#availability"
+      # Built-in phrase heuristics ("add to cart", "sold out", …) apply when no rules are given.
+      # Or be explicit:
+      inStock:
+        contains: ["in stock", "add to cart"]
+      outOfStock:
+        contains: ["sold out", "notify me"]
+      priceSelector: ".price"
+    notifyOn: [restock, sold_out]
+
+  # ── Static HTML: presence of an element means in stock ──
+  - name: Example sneaker
+    url: https://example.com/sneaker
+    check:
+      type: selector
+      selector: "button.add-to-cart:not([disabled])"
+      mode: exists
+    notify: [phone]
+
+  # ── JSON API the page itself calls (find it in DevTools → Network) ──
+  - name: Example console
+    url: https://example.com/console
+    check:
+      type: json
+      endpoint: https://api.example.com/v1/inventory?sku=ABC123
+      path: items[0].inStock
+      inStockValue: true
+      pricePath: items[0].price
+
+  # ── JS-rendered page behind bot protection: real headless Chromium ──
+  - name: Example GPU
+    url: https://example.com/gpu
+    interval: 10m
+    enabled: false
+    check:
+      type: playwright
+      waitFor: "[data-testid=buy-box]"
+      selector: "[data-testid=buy-box] button"
+      inStock:
+        contains: ["add to cart"]
