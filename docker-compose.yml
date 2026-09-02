@@ -1,0 +1,13 @@
+services:
+  stockwatch:
+    build: .
+    image: stockwatch:local
+    container_name: stockwatch
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./stockwatch.yaml:/app/stockwatch.yaml:ro
+      - ./data:/app/data
+    # Chromium is memory hungry; 512m is plenty for one page at a time.
+    mem_limit: 768m
+    init: true

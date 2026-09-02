@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  macOS launchd service — needed for the imessage notifier (Messages.app must run natively).
+  1. npm run build
+  2. sed "s|__REPO__|$(pwd)|g" deploy/com.stockwatch.plist > ~/Library/LaunchAgents/com.stockwatch.plist
+  3. launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.stockwatch.plist
+  Logs: data/stockwatch.log   Stop: launchctl bootout gui/$(id -u)/com.stockwatch
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.stockwatch</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/node</string>
+    <string>__REPO__/dist/index.js</string>
+    <string>run</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__REPO__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>LOG_FORMAT</key>
+    <string>json</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>__REPO__/data/stockwatch.log</string>
+  <key>StandardErrorPath</key>
+  <string>__REPO__/data/stockwatch.log</string>
+</dict>
+</plist>
