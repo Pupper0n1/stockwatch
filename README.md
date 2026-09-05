@@ -17,7 +17,7 @@ https://www.deathwishcoffee.com/products/fatal-attraction-tee
 ## Quick start
 
 ```bash
-git clone https://github.com/<you>/stockwatch && cd stockwatch
+git clone https://github.com/Pupper0n1/stockwatch && cd stockwatch
 npm install && npm run build
 cp .env.example .env            # fill in what you use
 node dist/index.js init         # writes stockwatch.yaml from the example
